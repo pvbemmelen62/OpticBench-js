@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<style>
+#myCanvas {
+	width: 1000px;
+	heigth: 400px;
+	background-color: blue;
+}
+</style>
+<script>
+function myOnLoad() {
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+
+  ctx.beginPath();
+  ctx.moveTo(50,50);
+  ctx.lineTo(150,50);
+  ctx.lineTo(100,100);
+  ctx.closePath();
+  
+  ctx.fillStyle = 'green';
+  ctx.fillRect(10, 10, 150, 100);
+  ctx.
+}
+</script>
+</head>
+<body onload="myOnLoad()">
+
+	<div></div>
+	<canvas id="myCanvas" width="20px" height="10px">
+  </canvas>
+
+</body>
+</html>
