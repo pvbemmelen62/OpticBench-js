@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<style>
+#myCanvas {
+	background-color: blue;
+}
+</style>
+<script src="ArrayFormatter.js"></script>
+<script src="Point.js"></script>
+<script src="Matrix.js"></script>
+<script src="Line.js"></script>
+<script src="Rect.js"></script>
+<script src="OpticBench.js"></script>
+<script>
+  function debug(s) {
+    var myDiv = document.getElementById("myContainer");
+    var pre = document.createElement("pre");
+    var txtNode = document.createTextNode(s);
+    pre.appendChild(txtNode);
+    myDiv.appendChild(pre);
+  }
+  function myOnLoad() {
+    var canvas = document.getElementById('myCanvas');
+    var ctx = canvas.getContext('2d');
+  
+    //Matrix.debug = debug;
+  
+    OpticBench.debug = debug;
+    Rect.debug = debug;
+    var bench = new OpticBench(canvas);
+    bench.addRay(new Line(0,1,4,1.25,1));
+    Line.debug = debug;
+    bench.draw();
+  }
+</script>
+</head>
+<body onload="myOnLoad()">
+
+	<div></div>
+	<canvas id="myCanvas" width="1000" height="400" >
+	Your browser does not support the canvas element.
+  </canvas>
+  
+  <div id="myContainer"></div>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Canvas test</title>
+<style>
+#myCanvas {
+  width: 1000px;
+  heigth: 400px;
+  background-color: blue;
+}
+</style>
+</head>
+<body onload="myLoad()">
+
+<!--  width="1000" height="400" -->
+<canvas id="myCanvas"
+    width="1000" height="400"
+    style="border:1px solid #c3c3c3;">
+Your browser does not support the canvas element.
+</canvas>
+
+<script>
+function myLoad() {
+  var canvas = document.getElementById("myCanvas");
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#FF0000";
+  ctx.fillRect(0,0,600,300);
+  
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(100,200);
+  ctx.lineTo(500,250);
+  ctx.stroke();
+}
+</script>
+
+</body>
+</html>
