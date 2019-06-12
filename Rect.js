@@ -40,6 +40,17 @@ Rect.prototype.scale = function(scale, fixedPoint) {
   var q1 = T.mapPoint(new Point(this.x1,this.y1));
   var result = new Rect(q0.x,q0.y,q1.x,q1.y);
   return result;
+};
+/** Returns clipped line, or null if line is totally clipped.*/
+Rect.prototype.clip = function(line) {
+  var lambdas = this.intersect(line);
+  if(lambdas[0] > lambdas[1]) {
+    return null;
+  }
+  var p0 = line.getPoint(lambdas[0]);
+  var p1 = line.getPoint(lambdas[1]);
+  var result = new Line(p0.x,p0.y,p1.x,p1.y,0);
+  return result;
 }
 /** Returns [lambdaMin,lambdaMax] of line intersections with rectangle.
  * If lambdaMax < lambdaMin then intersection should be considered empty.

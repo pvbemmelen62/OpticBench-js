@@ -168,9 +168,6 @@ Matrix.solveAXisB = function(A, B) {
         ABm[r2][c] -= s * ABm[r][c];
       }
     }
-    if(Matrix.debug != undefined) {
-      Matrix.debug(new Matrix(ABm).toString());
-    }
   }
   // The A in ABm now has upper triangular form.
   
@@ -225,12 +222,14 @@ Matrix.prototype.submatrix = function(r0,r1,c0,c1) {
   return result;
 };
 Matrix.prototype.toString = function(minCellWidth) {
-  minCellWidth = minCellWidth || 5;
-  var s = ArrayFormatter.twoDim(this.m, minCellWidth, "\n", ", ");
+// minCellWidth = minCellWidth || 5;
+//  var s = ArrayFormatter.twoDim(this.m, minCellWidth, "\n", ", ");
+  var s = JSON.stringify(this.m);
   return s;
 };
-/** Returns X  such that X maps fromRect to toRect.
- * Both rects must have x0,y0,x1,y1 members.
+/** Returns X such that X maps fromRect to toRect.
+ * The points (x0,y0), (x1,y1), (x0,y1) from fromRect map to
+ * the points (x0,y0), (x1,y1), (x0,y1) from toRect.
  */
 Matrix.fromRectToRect = function(fromRect, toRect) {
   // X A = B
@@ -255,6 +254,9 @@ Matrix.prototype.map = function(obj) {
   if(obj instanceof Point) {
     result = this.mapPoint(obj);
   }
+  else if(obj instanceof Rect) {
+    result = this.mapRect(obj);
+  }
   else {
     throw "invalid argument";
   }
@@ -269,8 +271,8 @@ Matrix.prototype.mapPoint = function(point) {
 };
 /** Returns rect with (x0,y0) and (x1,y1) mapped by matrix.*/
 Matrix.prototype.mapRect = function(rect) {
-  var q0 = this.mapXY(new Point(rect.x0, rect.y0));
-  var q1 = this.mapXY(new Point(rect.x1, rect.y1));
+  var q0 = this.mapPoint(new Point(rect.x0, rect.y0));
+  var q1 = this.mapPoint(new Point(rect.x1, rect.y1));
   var result = new Rect(q0.x,q0.y,q1.x,q1.y);
   return result;
 };

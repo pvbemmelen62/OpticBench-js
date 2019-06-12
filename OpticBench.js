@@ -1,69 +1,113 @@
 /**
  * Optic bench.
+ * element: html canvas element
  */
-function OpticBench(canvas) {
-  var bcr = canvas.getBoundingClientRect();  // object with x,y,width,height members.
-  this.bbCanvas = new Rect(bcr.x, bcr.y, bcr.x+bcr.width, bcr.y+bcr.height);
-  this.context2D = canvas.getContext('2d');
-  var bb = this.bbCanvas;
+function OpticBench(element) {
+  this.context2D = element.getContext('2d');
+  var canvas = this.context2D.canvas;
+  this.bbCanvas = new Rect(0, 0, canvas.width, canvas.height);
+  var bbC = this.bbCanvas;
   var offset = 100;
   var scale = 100;
   this.matrixB2C = Matrix.fromRectToRect(            // Bench to Canvas coordinates.
-      { x0: 0, y0: 0, x1: 1, y1: 1},
-      { x0: bb.x0+offset, y0: (bb.y0+bb.y1)/2,
-        x1: bb.x0+offset+scale, y1: (bb.y0+bb.y1)/2-scale
-      }
+      new Rect(0,0,1,1),
+      new Rect(
+        bbC.x0+offset, (bbC.y0+bbC.y1)/2,
+        bbC.x0+offset+scale, (bbC.y0+bbC.y1)/2-scale
+      )
   );
   this.matrixC2B = this.matrixB2C.inverse();
-  var p0 = new Point(bb.x0, bb.y0);
-  var q0 = this.matrixC2B.map(p0);
-  var p1 = new Point(bb.x1, bb.y1);
-  var q1 = this.matrixC2B.map(p1);
-  this.bbBench = new Rect(q0.x, q0.y, q1.x, q1.y);
+  this.bbBench = this.matrixC2B.map(this.bbCanvas);
   if(OpticBench.debug !== undefined) {
-    OpticBench.debug(JSON.stringify(this.bbBench));
+    OpticBench.debug("this.bbBench: " + this.bbBench);
+    OpticBench.debug("this.matrixB2C.map(this.bbBench): " + this.matrixB2C.map(this.bbBench));
   }
+  // Want to see line ends being clipped:
+  this.bbBench = this.bbBench.scale(0.98);
+  //
+  if(OpticBench.debug !== undefined) {
+    OpticBench.debug("this.bbBench: " + this.bbBench);
+    OpticBench.debug("this.matrixB2C.map(this.bbBench): " + this.matrixB2C.map(this.bbBench));
+  }
+  this.axis = new Line(0,0,this.bbBench.x1,0);
   this.lines = [];
   this.lenses = [];
 }
 OpticBench.prototype.addRay = function(line) {
   this.lines.push(line);
-}
+};
 OpticBench.prototype.addLens = function(lens) {
   this.lenses.push(lens);
+};
+OpticBench.prototype.followLine = function(line,currentLens) {
+  var ctx = this.context2D;
+  var b2c = this.matrixB2C;
+  var bbB = this.bbBench;
+  var lambdasBB = bbB.intersect(line); // [lambdaMin, lambdaMax]
+  if(lambdasBB[1] < 0) {
+    return;
+  }
+  var p0 = line.getPoint(0);
+  var lambdaFirst = lambdasBB[1];
+  var objectFirst = bbB;
+  for(var j in this.lenses) {
+    var lens = this.lenses[j];
+    if(lens === currentLens) {
+      continue;
+    }
+    var lambdasL = Line.intersect(line, lens.line);
+    var hitsLens =
+       new Range(0,lambdaFirst).in(lambdasL[0]) &&
+       new Range(0,1).in(lambdasL[1]);
+    if(hitsLens) {
+      objectFirst = lens;
+      lambdaFirst = lambdasL[0];
+    }
+  }
+  var p1 = line.getPoint(lambdaFirst);
+
+  new Line(p0.x,p0.y,p1.x,p1.y).draw(this);
+
+  if(objectFirst === bbB) {
+    // do nothing
+  }
+  else if(objectFirst instanceof Lens) {
+    var lens = objectFirst;
+    var newLine = lens.breakLine(line);
+    if(newLine === null) {
+      // line may not hit lens, caused by rounding errors.
+      throw "line does not hit lens.";
+    }
+    // Recursive call
+    this.followLine(newLine,lens);
+  }
+  else {
+    throw "illegal objectFirst";
+  }
 }
 OpticBench.prototype.draw = function() {
   var ctx = this.context2D;
-  var b2c = this.matrixB2C;
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 2;
+  this.axis.draw(this);
+
   ctx.strokeStyle = "yellow";
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 2;
   for(var i in this.lines) {
     if(OpticBench.debug !== undefined) {
-      OpticBench.debug(JSON.stringify(this.lines[i]));
+      OpticBench.debug("this.lines["+i+"]: " + this.lines[i]);
     }
     var line = this.lines[i];
-
-    var bbBsmall = this.bbBench.scale(0.98);
-    var lambdas = bbBsmall.intersect(line); // [lambdaMin, lambdaMax]
-    var p0 = line.getPoint(0);
-    var p1 = line.getPoint(lambdas[1]);
-    var q0 = b2c.map(p0);
-    var q1 = b2c.map(p1);
-
-    var lambdaFirst = lambdas[1];
-    for(var j in this.lenses) {
-      var lens = this.lenses[j];
-      var lambdas = Line.intersect(line, lens.line);
-      if(lambdas[0] > 0 && lambdas[0] < lambdaFirst &&
-          lambdas[1] > 0 && lambdas[1] < 1) {
-        ga hier verder
-      }
-    }
-    ctx.strokeStyle = "yellow";
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.moveTo(q0.x,q0.y);
-    ctx.lineTo(q1.x,q1.y);
-    ctx.stroke();
+    
+    this.followLine(line,null);
+  }
+  ctx.strokeStyle = "black";
+  ctx.font = "12pt monospaced";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.lineWidth = 1;
+  for(var i in this.lenses) {
+    var lens = this.lenses[i];
+    lens.draw(this);
   }
 }

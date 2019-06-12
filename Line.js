@@ -14,18 +14,27 @@ Line.prototype.toString = function() {
 }
 Line.prototype.draw = function(opticBench) {
   var ob = opticBench;
-  switch(this.type) {
-  case 0:
-    break;
-  case 1:
-    break;
-  case 2:
-    break;
-  case 3:
-    break;
-  default:
-    throw "Invalid line type";
+  var b2c = ob.matrixB2C;
+  var ctx = ob.context2D;
+  
+  var p0 = new Point(this.x0, this.y0);
+  var p1 = new Point(this.x1, this.y1);
+  
+  //new Circle(p0.x,p0.y,0.2).draw(opticBench);
+  //new Circle(p1.x,p1.y,0.2).draw(opticBench);
+
+  var q0 = b2c.map(p0);
+  var q1 = b2c.map(p1);
+  
+  if(Line.debug !== undefined) {
+    Line.debug("q0: " + q0);
+    Line.debug("q1: " + q1);
   }
+
+  ctx.beginPath();
+  ctx.moveTo(q0.x,q0.y);
+  ctx.lineTo(q1.x,q1.y);
+  ctx.stroke();
 };
 /** Point along line, with lamda=0 for [x0,y0], and lambda=1 for [x1,y1] . */
 Line.prototype.getPoint = function(lambda) {
@@ -63,10 +72,6 @@ Line.intersect = function(line0,line1) {
   X = X.transpose();
   var row = X.m[0];
   var lambdas = [row[0],-row[1]];
-  if(Line.debug !== undefined) {
-    Line.debug("Line.intersect(" + line0 + ", " + line1 + ") : " +
-        JSON.stringify(lambdas));
-  }
   return lambdas;
 };
 /** Returns -1,0,1 to indicate if line0, in increasing lambda direction, enters the
